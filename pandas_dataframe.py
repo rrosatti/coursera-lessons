@@ -119,5 +119,105 @@ rows = ['POPESTIMATE2010',
 		'POPESTIMATE2014', 
 		'POPESTIMATE2015']
 
-df3 = df3.apply(lambda x: np.max(x[rows]), axis=1)
-print(df3)
+#df3 = df3.apply(lambda x: np.max(x[rows]), axis=1)
+#print(df3)
+
+
+## ------------------------------- Group By ------------------------
+
+## calculate the avg pop by state
+"""for group, frame in df3.groupby('STNAME'):
+	avg = np.average(frame['CENSUS2010POP'])
+	print('Counties in state ' + group + ' have an average population of ' + str(avg))
+"""
+
+## another cool way to do the same thing
+#print(df3.groupby('STNAME').agg({'CENSUS2010POP': np.average}))
+
+## Group by "Series"
+#print(df3.set_index('STNAME').groupby(level=0)['CENSUS2010POP'].agg({'avg': np.average, 'sum': np.sum}))
+
+## Group by "DataFrame"
+"""print(df3.set_index('STNAME').groupby(level=0)['POPESTIMATE2010', 'POPESTIMATE2011']
+	.agg({'avg': np.average, 'sum': np.sum}))
+"""
+
+## ------------------------------- Scales ------------------------
+
+"""
+Ratio Scale:  units are equally spaced (Ex: weight, height)
+Interval Scale: units are equally spaced, but there is no true zero
+Ordinal Scale: the order of the units are important, but not evenly spaced (Ex: Letter grades A+, A)
+Nominal Scale: categories of data, but the categories have no order with respect to one another (Ex: Teams of a sport)
+	- In pandas it is called Categorical data
+"""
+
+df = pd.DataFrame(['A+', 'A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D+', 'D'],
+                  index=['excellent', 'excellent', 'excellent', 'good', 'good', 'good', 'ok', 'ok', 'ok', 'poor', 'poor'])
+df.rename(columns={0: 'Grades'}, inplace=True)
+
+## create a category
+grades = df['Grades'].astype('category', 
+							categories=['D', 'D+', 'C-', 'C', 'C+', 'B-', 'B', 'B+', 'A-', 'A', 'A+'],
+							ordered=True)
+
+print(grades)
+
+print(grades > 'B')
+
+## using cut function
+## Ex: cut could convert ages to groups of age ranges.
+s = pd.Series([19, 21, 45, 78, 46, 24, 39, 68, 62, 29])
+print(pd.cut(s, 3, labels=['Young', 'Adult', 'Elder']))
+
+
+## ------------------------------- Pivot Tables ------------------------
+## Pivot Tables are used to reorganize and summarize selected columns and rows of data in order to obtain a desired report.[DataFrame]
+cars_df = pd.read_csv('cars.csv')
+#print(cars_df)
+
+print(cars_df.pivot_table(values='(kW)', index='YEAR', columns='Make', aggfunc=np.mean))
+
+## now passing multiple functions
+print(cars_df.pivot_table(values='(kW)', index='YEAR', columns='Make', aggfunc=[np.mean, np.min], margins=True))
+
+## ------------------------------- Date Functionality ------------------------
+
+## Timestamp
+#print(pd.Timestamp('05/12/2016 01:03PM'))
+
+## Period
+#print(pd.Period('12/2016'))
+#print(pd.Period('05/12/2016'))
+
+print
+## DateTimeIndex
+t1 = pd.Series(list('abc'), [pd.Timestamp('2016-12-04'), pd.Timestamp('2016-12-05'), pd.Timestamp('2016-12-06')])
+print(t1)
+
+## PeriodIndex
+t2 = pd.Series(list('def'), [pd.Period('2016-11'), pd.Period('2016-12'), pd.Period('2017-01')])
+print(t2)
+
+## Converting to DateTime
+d1 = ['11 June 1995', 'Jun 29, 2010', '2012-12-21', '9/15/18']
+print(pd.to_datetime(d1))
+print(pd.to_datetime(d1, dayfirst=True))
+
+## TimeDeltas (Difference in Time)
+print(pd.Timestamp('05-12-2016 1:15PM') + pd.Timedelta('12D 12H'))
+
+## Dates in DataFrame
+	## creating range
+dates = pd.date_range('01-01-2017', periods=12, freq='2W-SUN')
+print dates
+
+df = pd.DataFrame({'Count 1': 100 + np.random.randint(-5, 10, 12).cumsum(),
+                  'Count 2': 120 + np.random.randint(-5, 10, 12)}, index=dates)
+print df
+print df.index.weekday_name
+
+# "group" by month(M)
+print df.resample('M').mean()
+# "group" by year/month
+print df['2017-03']
